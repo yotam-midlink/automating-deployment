@@ -1,0 +1,12 @@
+Assuming the BBB is at the beginning of a line, I ended up using an even simpler expression:
+
+sed -e '/^BBB/s/^/#/' -i file
+One more note for the future me. Do not overlook the -i. Because this won't work: sed -e "..." same_file > same_file.
+
+
+this is how i used sed to change comments in wp-config.php
+
+but switched to " instead of ' and use \/\/ instead of // in url
+
+sed -e "/^define('WP_HOME','https:\/\/backup.campus.gov.il'/s/^/\/\/ /" -i wp-config.php  # comment
+sed -e "/^\/\/ define('WP_HOME','https:\/\/backup.campus.gov.il'/s/^\/\/ //g" -i wp-config.php  #uncomment
