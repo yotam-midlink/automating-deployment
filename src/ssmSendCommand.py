@@ -7,9 +7,10 @@ class Ssm_send_command():
         self._ssm = self._client.client('ssm')
         self._instancesIds = instancesIds
         
-
+    # not handling errors maybe try catch method. 
     def RunCommands(self, commands):
         response = self.SendCommands(commands)
+        time.sleep(3)
         status = self.GetStatus(response)
         print(status)
     
