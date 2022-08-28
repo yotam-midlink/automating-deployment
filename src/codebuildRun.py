@@ -5,11 +5,11 @@ import time
 from botocore.exceptions import ClientError
 
 class Codebuild_run():
-    def __init__(self, session, projectName, secondarySourcesOverride=[]):
+    def __init__(self, session, projectName, buildspecOverride=''):
         self._client = session
         self._codebuild = self._client.client('codebuild')
         self._projectName = projectName
-        self._secondarySourcesOverride = secondarySourcesOverride
+        self._buildspecOverride = buildspecOverride
 
     def Runcodebuild(self):
         response = self.StartBuild()
@@ -17,7 +17,7 @@ class Codebuild_run():
         print(status)
 
     def StartBuild(self):
-        response = self._codebuild.start_build(projectName=self._projectName, secondarySourcesOverride=self._secondarySourcesOverride)
+        response = self._codebuild.start_build(projectName=self._projectName, buildspecOverride=self._buildspecOverride)
         return(response)
 
     def GetStatus(self, response):

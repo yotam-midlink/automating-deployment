@@ -39,39 +39,71 @@ class Ecs_commands():
         self.__originalMin = self.__getMinNum
     
     def __setMaxAndMin(self, max, min):
-        self._application_autoscaling.register_scalable_target(
+        response = self._application_autoscaling.register_scalable_target(
             ServiceNamespace='ecs',
-            ResourceIds=[f'service/{self._clusterName}/{self._serviceName}'],
+            ResourceId=f'service/{self._clusterName}/{self._serviceName}',
             ScalableDimension='ecs:service:DesiredCount',
             MaxCapacity=max,
             MinCapacity=min
         )
+        print(response)
 
     def __setDesired(self, desired):
-        self._ecs.update_service(
+        response = self._ecs.update_service(
             cluster = self._clusterName,
             service = self._serviceName,
             desiredCount = desired
         )
+        print(response)
 
     def updateServiceCapacity(self, desired, max, min):
         self.__setMaxAndMin(max=max, min=min)
         self.__setDesired(desired=desired)
 
 
+    def validateCapacity(self, desired, max, min):
+        if(False == self.__checkCapacity(desired, max, min)):
+            print("Error: capcity was not updated.")
+            return False
+        print ("capacity was updated correctly")
+        return True
+
     def __checkCapacity(self, desired, max, min):
         for i in range(5):
-            if (__capacityChanged(desired, max, min)):
-                break
+            if (self.__capacityChanged(desired, max, min)):
+                return True
             time.sleep(4)
+        return False
 
     def __capacityChanged(self, desired, max, min):
         if (
-            desired == self.__getDesiredNum() &
-            max == self.__getMaxNum &
-            min == self.__getMinNum
+            desired == self.__getDesiredNum() and
+            max == self.__getMaxNum() and
+            min == self.__getMinNum()
             ):
             return True
+        return False
+
+    def validateRunningTasks(self, desired):
+        if(self.__areAllDesiredRunning(desired=desired)):
+            print("desired tasks are running")
+            return True
+        print ("desired tasks are not equal to running tasks")
+        return False
+
+    def __areAllDesiredRunning(self, desired):
+        for i in range(5):
+            if (desired == self.__getRunningTasks()):
+                return True
+            time.sleep(4)
+        return False
+
+    def __getRunningTasks(self):
+        response = self._ecs.describe_services(
+            cluster = self._clusterName,
+            services=[self._serviceName]
+        )
+        return response['services'][0]['runningCount']
 
         
 

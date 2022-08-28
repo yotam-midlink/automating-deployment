@@ -1,0 +1,94 @@
+version: 0.2
+
+env:
+  variables:
+      BACKUP_DB_HOST: "backup-production-ecs-cluster-cluster.cluster-camrroswumcd.eu-west-1.rds.amazonaws.com"
+      PROD_DB_HOST: "production-ecs-cluster-2022-02-22-cluster.camrroswumcd.eu-west-1.rds.amazonaws.com"
+      DB_NAME: "campus"
+      DB_USER: "dbmaster"
+      BACKUP_RDS_IDENTIFIER: "backup-production-ecs-cluster-cluster"
+  #parameter-store:
+     # key: "value"
+     # key: "value"
+  secrets-manager:
+      DB_PASSWORD: arn:aws:secretsmanager:eu-west-1:749395632050:secret:db_password-yjEcNz:password
+      PROD_DP_PASSWORD: arn:aws:secretsmanager:eu-west-1:749395632050:secret:db_password-yjEcNz:prod_password
+  #exported-variables:
+     # - variable
+     # - variable
+  #git-credential-helper: yes
+#batch:
+  #fast-fail: true
+  #build-list:
+  #build-matrix:
+  #build-graph:
+phases:
+  #install:
+    #If you use the Ubuntu standard image 2.0 or later, you must specify runtime-versions.
+    #If you specify runtime-versions and use an image other than Ubuntu standard image 2.0, the build fails.
+    #runtime-versions:
+      # name: version
+      # name: version
+    #commands:
+      # - command
+      # - command
+  pre_build:
+    commands:
+      - yum update -y --skip-broken
+      - yum install mysql -y
+      - pip3 uninstall awscli -y
+      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - unzip -q awscliv2.zip 
+      - ./aws/install
+      - aws --version
+
+  build:
+    commands:
+      
+      - echo "Start sync files"
+      - | 
+        export TASK_EXEC_ARN=`(aws datasync start-task-execution \
+        --task-arn arn:aws:datasync:eu-west-1:749395632050:task/task-04d5b7a9053cf7250 \
+        | jq -r '.TaskExecutionArn')`
+      - codebuild-breakpoint
+      - |
+        export RES=`(aws rds describe-db-clusters --db-cluster-identifier backup-production-ecs-cluster-cluster |  jq -r '.DBClusters[0].Status')`
+        echo $RES
+        if [[ $RES != available ]];
+        then 
+          echo "Start db"
+          aws rds start-db-cluster --db-cluster-identifier $BACKUP_RDS_IDENTIFIER
+          aws rds wait db-instance-available --db-instance-identifier $BACKUP_RDS_IDENTIFIER
+        fi
+      # - codebuild-breakpoint
+      - echo "Start db sync"
+      - mysqldump -h $PROD_DB_HOST -p$PROD_DP_PASSWORD -u $DB_USER $DB_NAME > $DB_NAME.sql
+      - mysql -h $BACKUP_DB_HOST -P 3306 -p$DB_PASSWORD -u $DB_USER --execute="drop database $DB_NAME;"
+      - mysql -h $BACKUP_DB_HOST -P 3306 -p$DB_PASSWORD -u $DB_USER --execute="create database $DB_NAME;"
+      - mysql -h $BACKUP_DB_HOST -p$DB_PASSWORD -u $DB_USER $DB_NAME < $DB_NAME.sql
+      # - aws rds stop-db-cluster --db-cluster-identifier $BACKUP_RDS_IDENTIFIER
+      - echo "Check status of sync"
+      - aws datasync describe-task-execution --task-execution-arn $TASK_EXEC_ARN | jq -r '.Status'
+      # - command
+  #post_build:
+    #commands:
+      # - command
+      # - command
+#reports:
+  #report-name-or-arn:
+    #files:
+      # - location
+      # - location
+    #base-directory: location
+    #discard-paths: yes
+    #file-format: JunitXml | CucumberJson
+#artifacts:
+  #files:
+    # - location
+    # - location
+  #name: $(date +%Y-%m-%d)
+  #discard-paths: yes
+  #base-directory: location
+#cache:
+  #paths:
+    # - paths
