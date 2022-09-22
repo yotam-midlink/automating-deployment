@@ -105,6 +105,45 @@ class Ecs_commands():
         )
         return response['services'][0]['runningCount']
 
+    def changeServiceUrl(self, taskdefenition):
+        self.changeTaskDefenition(taskdefenition);
+        self.resetService();
+        validateTaskDefnition();
+
+    def resetService(self):
+        originalDesired = self.__getDesiredNum()
+        originalMax = self.__getMaxNum()
+        originalMin = self.__getMinNum()
+        self.updateServiceCapacity(desired=0,max=0, min=0)
+        self.validateCapacity(desired=0,max=0, min=0)
+        self.updateServiceCapacity(desired=originalDesired,max=originalMax, min=originalMin)
+        self.validateCapacity(desired=originalDesired,max=originalMax, min=originalMin)
+
+    def changeTaskDefenition(self, taskdefenition):
+        response = self._ecs.update_service(
+            cluster = self._clusterName,
+            service = self._serviceName,
+            taskDefinition = taskdefenition
+        )
+        return response
+
+    def validateTaskDefnition(self, taskdefenition):
+        response = self._ecs.describe_services(
+            cluster = self._clusterName,
+            services=[self._serviceName]
+        )
+        current_taskdefenition = response['services'][0]['taskDefinition']
+        print(f"current_taskdefenition: {current_taskdefenition}")
+        if (current_taskdefenition == taskdefenition):
+            print("task defenition was updated")
+            return True
+        print("task defenition was not updated")
+        return False
+
+
+
+    
+
         
 
     def killTask(self, serviceName):

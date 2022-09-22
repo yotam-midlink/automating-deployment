@@ -1,5 +1,5 @@
 from src.session import Session
-from  src.codebuildRun import Codebuild_run 
+from src.codebuildRun import Codebuild_run 
 from src.eventBridgeRule import Eventbridge_rule
 from src.ssmSendCommand import Ssm_send_command
 from src.autoscalingUpdate import Autoscaling_update
@@ -10,7 +10,7 @@ import time
 
 # local vars
 
-backupTasks             = 25
+backupTasks             = 1
 sleeptime               = 5
 
 
@@ -22,6 +22,7 @@ if g_mfa_serial:
 
 # running codebuild and stop trigger.
 
+print("running codebuild and stop trigger.")
 eventBridgeRule = Eventbridge_rule(session.GetSession(), g_event_rule_name)
 eventBridgeRule.disableRule()
 if(eventBridgeRule.isDisabled()):
@@ -34,7 +35,11 @@ codebuildRun = Codebuild_run(session.GetSession(),g_project_name, g_codebuild_bu
 response = codebuildRun.Runcodebuild()
 print(response)
 
+time.sleep(sleeptime)
+
 # raising backup scaling group + scaling up ecs backup containers
+
+print("raising backup scaling group + scaling up ecs backup containers")
 backupEcs = Ecs_commands(session.GetSession(),g_ecs_prod_cluster, g_ecs_backup_service)
 backupEcs.setOriginalValues()
 backupEcs.updateServiceCapacity(desired=backupTasks, max=backupTasks, min=backupTasks)
@@ -42,7 +47,7 @@ time.sleep(sleeptime)
 backupEcs.validateCapacity(desired=backupTasks, max=backupTasks, min=backupTasks)
 
 # run ssm command for switching from backuup to production on wp-config. 
-ssmSendCommand = Ssm_send_command(session.GetSession(), g_test_instance_id)
+# ssmSendCommand = Ssm_send_command(session.GetSession(), g_test_instance_id)
 # ssmSendCommand.RunCommands(g_remote_commands_comment)
 # ssmSendCommand.RunCommands(g_remote_commands_uncomment)
 
