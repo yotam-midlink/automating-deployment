@@ -17,6 +17,8 @@ g_ecs_dev_service               = "web-test1"
 g_ecs_prod_cluster              = "Campus-Production-Ecs"
 g_ecs_prod_service              = "wp-prod"
 g_ecs_backup_service            = "wp-backup-prod"
+g_ecs_backup_taskdefenition_pointing_to_backup = "arn:aws:ecs:eu-west-1:749395632050:task-definition/wp-backaup-production:7"
+g_ecs_backup_taskdefenition_pointing_to_prod   = "arn:aws:ecs:eu-west-1:749395632050:task-definition/wp-backaup-production:5"
 
 # ssm vars 
 

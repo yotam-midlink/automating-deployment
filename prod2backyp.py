@@ -10,7 +10,8 @@ import time
 
 # local vars
 
-backupTasks             = 1
+backupTasks             = 25
+backupTestTasks         = 1
 sleeptime               = 5
 
 
@@ -42,11 +43,14 @@ time.sleep(sleeptime)
 print("raising backup scaling group + scaling up ecs backup containers")
 backupEcs = Ecs_commands(session.GetSession(),g_ecs_prod_cluster, g_ecs_backup_service)
 backupEcs.setOriginalValues()
-backupEcs.updateServiceCapacity(desired=backupTasks, max=backupTasks, min=backupTasks)
+backupEcs.updateServiceCapacity(desired=backupTestTasks, max=backupTestTasks, min=backupTestTasks)
 time.sleep(sleeptime)
-backupEcs.validateCapacity(desired=backupTasks, max=backupTasks, min=backupTasks)
+backupEcs.validateCapacity(desired=backupTestTasks, max=backupTestTasks, min=backupTestTasks)
 
-# run ssm command for switching from backuup to production on wp-config. 
+# change wp-config site url.
+
+
+ 
 # ssmSendCommand = Ssm_send_command(session.GetSession(), g_test_instance_id)
 # ssmSendCommand.RunCommands(g_remote_commands_comment)
 # ssmSendCommand.RunCommands(g_remote_commands_uncomment)
