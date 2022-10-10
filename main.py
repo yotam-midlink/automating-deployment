@@ -6,6 +6,7 @@ from src.autoscalingUpdate import Autoscaling_update
 from src.ecsCommands import Ecs_commands
 from src.cloudfrontCommands import CloudFront_commands
 from src.varibales import *
+from src.utils import *
 import time
 
 
@@ -44,19 +45,30 @@ if __name__ == '__main__':
     # ssmSendCommand.RunCommands(g_remote_commands_comment)
     # ssmSendCommand.RunCommands(g_remote_commands_uncomment)
 
-    # autoscaling_update = Autoscaling_update(session.GetSession(), g_auto_scaling_group_name)
-    # autoscaling_update.updateGroupCapacity(4)
-    # autoscaling_update.validateUpdate(4)
+    autoscaling_update = Autoscaling_update(session.GetSession(), g_auto_scaling_group_name)
+    autoscaling_update.updateGroupCapacity(1)
+    autoscaling_update.validateUpdate(1)
 
-    ecsClass = Ecs_commands(session.GetSession(),g_ecs_cluster, g_ecs_service)
-    ecsClass.setOriginalValues()
-    ecsClass.changeTaskDefenition(g_ecs_new_taskdefenition_arn)
-    ecsClass.resetService()
-    ecsClass.validateTaskDefnition(g_ecs_new_taskdefenition_arn)
+    # ecsClass = Ecs_commands(session.GetSession(),g_ecs_cluster, g_ecs_service)
+    # ecsClass.setOriginalValues()
+    # ecsClass.changeTaskDefenition(g_ecs_new_taskdefenition_arn)
+    # ecsClass.resetService()
+    # ecsClass.validateTaskDefnition(g_ecs_new_taskdefenition_arn)
 
-    cloudfrontClass = CloudFront_commands(session.GetSession(),g_cloudfront_test_distrbution)
-    cloudfrontClass.clearCache()
-    
+    # cloudfrontClass = CloudFront_commands(session.GetSession(),g_cloudfront_test_distrbution)
+    # if(cloudfrontClass.clearCache()):
+    #     print("cache is cleared")
+    # else:
+    #     print("cache was not cleared")
+
+backupUrlChecker = urlChecker('https://backup.campus.gov.il/', 'https://campus.gov.il/')    
+# url = 'https://backup.campus.gov.il/'
+# response = requests.get(url)
+# print(response.url)
+
+# print(backupUrlChecker.isItGetOrigin())
+# print(backupUrlChecker.isItRedirect())
+
     
 
 

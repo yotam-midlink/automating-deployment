@@ -4,6 +4,11 @@ from urllib import response
 import pprint 
 import time
 
+# local variables
+
+sleeptime = 5
+countdown = 20
+
 
 
 class Autoscaling_update():
@@ -41,11 +46,11 @@ class Autoscaling_update():
 
     def updateGroupCapacity(self, desiredCapacity):
         self._autoscaling.update_auto_scaling_group(AutoScalingGroupName=self._autoscalingGroup,
-        MinSize=desiredCapacity,
         DesiredCapacity=desiredCapacity )
         
 
     def validateUpdate(self, desiredCapacity):
+        time.sleep(sleeptime)
         if(self.validateDesiredCapacity(desiredCapacity) == False):
             print("Desired capacity was not updated.")
             return False
@@ -54,26 +59,29 @@ class Autoscaling_update():
 
 
     def loopUntilUpdateIsFinish(self, desiredCapacity):
-        for i in range(10):
-            if(self.checkHealthStatus(desiredCapacity)):
+        for i in range(countdown):
+            if(self.checkInstanceStatus(desiredCapacity)):
                 return True
-            time.sleep(5)
+            time.sleep(sleeptime)
+        print("not all instances are updated")
         return False
     
-    def checkHealthStatus(self, desiredCapacity):
+    def checkInstanceStatus(self, desiredCapacity):
         for i in range(desiredCapacity):
+            print(i)
             response = self._autoscaling.describe_auto_scaling_groups(AutoScalingGroupNames=[self._autoscalingGroup])
-            healthStatus = response['AutoScalingGroups'][0]['Instances'][i]['HealthStatus']
+            instanceStatus = response['AutoScalingGroups'][0]['Instances'][i]['LifecycleState']
             instanceId = response['AutoScalingGroups'][0]['Instances'][i]['InstanceId']
-            print(f"instance {instanceId} is {healthStatus}")
-            if(healthStatus != 'Healthy'):
+            print(f"instance {instanceId} is {instanceStatus}")
+            if(instanceStatus != 'InService'):
                 return False
+        print(f"{desiredCapacity} instances in service")
         return True
 
     def validateDesiredCapacity(self, desiredCapacity):
         time.sleep(1)
         response = self._autoscaling.describe_auto_scaling_groups(AutoScalingGroupNames=[self._autoscalingGroup])
-        return response['AutoScalingGroups'][0]['MaxSize'] == desiredCapacity
+        return response['AutoScalingGroups'][0]['DesiredCapacity'] == desiredCapacity
 
 
     def backToOriginals(self):
